@@ -47,6 +47,8 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
     BluetoothAdapter bluetoothAdapter;
     ArrayList arrayList = new ArrayList();
     BluetoothDevicesAdapter bluetoothDevicesAdapter;
+    private boolean bluetoothSupported = false;
+    private int dummy=10000;
 
 
     public BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -58,7 +60,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
                     break;
                 case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
                     bluetoothDevicesAdapter = new BluetoothDevicesAdapter(arrayList);
-                    if(arrayList.size()>0) {
+                    if (arrayList.size() > 0) {
                         rvBluetoothDevices.setAdapter(bluetoothDevicesAdapter);
                         bluetoothDevicesAdapter.val().subscribe(new Observer<String>() {
                             @Override
@@ -81,9 +83,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
 
                             }
                         });
-                    }
-                    else
-                    {
+                    } else {
                         Toast.makeText(MainActivity.this, "No Device Found", Toast.LENGTH_SHORT).show();
                     }
                     Toast.makeText(MainActivity.this, "Discovery Finished", Toast.LENGTH_SHORT).show();
@@ -112,9 +112,9 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-
-
+        bluetoothDevicesAdapter = new BluetoothDevicesAdapter(arrayList);
         rvBluetoothDevices.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        rvBluetoothDevices.setAdapter(bluetoothDevicesAdapter);
         if (savedInstanceState != null) {
             Toast.makeText(MainActivity.this, savedInstanceState.getString("Message", ""), Toast.LENGTH_SHORT).show();
             arrayList = ((ArrayList) savedInstanceState.getSerializable("BluetoothDevices"));
@@ -185,6 +185,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1001 && resultCode == RESULT_OK) {
             Toast.makeText(MainActivity.this, "Bluetooth enabled", Toast.LENGTH_SHORT).show();
+            bluetoothSupported = true;
         } else {
             Toast.makeText(MainActivity.this, "Please enable Bluetooth to continue", Toast.LENGTH_SHORT).show();
         }
@@ -194,14 +195,29 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_search_devices:
-                // If we're already discovering, stop it
-                if (bluetoothAdapter.isDiscovering()) {
-                    bluetoothAdapter.cancelDiscovery();
-                } else
+                if (bluetoothSupported) {
+                    // If we're already discovering, stop it
+                    if (bluetoothAdapter.isDiscovering()) {
+                        bluetoothAdapter.cancelDiscovery();
+                    } else
+                        Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
 
                     bluetoothAdapter.startDiscovery();
+                } else {
+                    Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
+
+
+                    BlueToothDevices bluetoothDevices = new BlueToothDevices();
+                    bluetoothDevices.setAddress(""+dummy);
+                    bluetoothDevices.setClassName(""+dummy);
+                    bluetoothDevices.setName(""+dummy);
+                    arrayList.add(bluetoothDevices);
+                    bluetoothDevicesAdapter.notifyDataSetChanged();
+                    dummy++;
+                }
                 break;
         }
+
     }
 
     @Override
