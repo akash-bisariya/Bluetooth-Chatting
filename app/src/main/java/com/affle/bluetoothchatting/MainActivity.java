@@ -48,7 +48,6 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
     ArrayList arrayList = new ArrayList();
     BluetoothDevicesAdapter bluetoothDevicesAdapter;
     private boolean bluetoothSupported = false;
-    private int dummy=10000;
 
 
     public BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -70,7 +69,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
 
                             @Override
                             public void onNext(@NonNull String s) {
-
+                                Toast.makeText(MainActivity.this, "Clicked on $it", Toast.LENGTH_LONG).show();
                             }
 
                             @Override
@@ -115,51 +114,59 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         bluetoothDevicesAdapter = new BluetoothDevicesAdapter(arrayList);
         rvBluetoothDevices.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         rvBluetoothDevices.setAdapter(bluetoothDevicesAdapter);
+        if(bluetoothAdapter!=null&&bluetoothAdapter.isEnabled())
+        {
+            bluetoothSupported=true;
+        }
+
         if (savedInstanceState != null) {
             Toast.makeText(MainActivity.this, savedInstanceState.getString("Message", ""), Toast.LENGTH_SHORT).show();
             arrayList = ((ArrayList) savedInstanceState.getSerializable("BluetoothDevices"));
             rvBluetoothDevices.setAdapter(new BluetoothDevicesAdapter(arrayList));
 
         } else {
-            RxPermissions rxPermissions = new RxPermissions(this);
-            if (bluetoothAdapter != null) {
-                rxPermissions
-                        .request(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        .subscribeOn(Schedulers.io())
-                        .compose(this.<Boolean>bindToLifecycle())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Observer<Boolean>() {
-                            @Override
-                            public void onSubscribe(Disposable d) {
-                                Toast.makeText(MainActivity.this, "test onSubscribe", Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onNext(Boolean value) {
-                                if (!bluetoothAdapter.isEnabled()) {
-                                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                                    startActivityForResult(enableBtIntent, 1001);
-                                }
-
-
-                            }
-
-                            @Override
-                            public void onError(Throwable e) {
-                                Toast.makeText(MainActivity.this, "test onError", Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                Toast.makeText(MainActivity.this, "test onComplete", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            } else {
-                Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
-            }
+            getBluetoothOn();
         }
 
 
+    }
+
+    private void getBluetoothOn() {
+        RxPermissions rxPermissions = new RxPermissions(this);
+        if (bluetoothAdapter != null) {
+            rxPermissions
+                    .request(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    .subscribeOn(Schedulers.io())
+                    .compose(this.<Boolean>bindToLifecycle())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<Boolean>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                        }
+
+                        @Override
+                        public void onNext(Boolean value) {
+                            if (!bluetoothAdapter.isEnabled()) {
+                                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                                startActivityForResult(enableBtIntent, 1001);
+                            }
+
+
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Toast.makeText(MainActivity.this, "test onError", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            Toast.makeText(MainActivity.this, "test onComplete", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else {
+            Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
@@ -197,23 +204,18 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
             case R.id.btn_search_devices:
                 if (bluetoothSupported) {
                     // If we're already discovering, stop it
-                    if (bluetoothAdapter.isDiscovering()) {
-                        bluetoothAdapter.cancelDiscovery();
-                    } else
-                        Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
 
-                    bluetoothAdapter.startDiscovery();
+                    if(!bluetoothAdapter.isEnabled())
+                        getBluetoothOn();
+                    else {
+                        if (bluetoothAdapter.isDiscovering()) {
+                            bluetoothAdapter.cancelDiscovery();
+                        } else
+                            bluetoothAdapter.startDiscovery();
+                    }
                 } else {
+
                     Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
-
-
-                    BlueToothDevices bluetoothDevices = new BlueToothDevices();
-                    bluetoothDevices.setAddress(""+dummy);
-                    bluetoothDevices.setClassName(""+dummy);
-                    bluetoothDevices.setName(""+dummy);
-                    arrayList.add(bluetoothDevices);
-                    bluetoothDevicesAdapter.notifyDataSetChanged();
-                    dummy++;
                 }
                 break;
         }
