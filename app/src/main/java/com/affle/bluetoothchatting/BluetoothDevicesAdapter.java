@@ -1,5 +1,6 @@
 package com.affle.bluetoothchatting;
 
+import android.bluetooth.BluetoothDevice;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,11 +18,11 @@ import io.reactivex.subjects.PublishSubject;
  */
 
 public class BluetoothDevicesAdapter extends RecyclerView.Adapter<BluetoothDevicesAdapter.ViewHolder>{
-    ArrayList<BlueToothDevices> arrayList = new ArrayList();
+    ArrayList<BluetoothDevice> arrayList = new ArrayList();
     private PublishSubject<String> clickSubject =PublishSubject.create();
 
 
-    public BluetoothDevicesAdapter(ArrayList<BlueToothDevices> arrayList) {
+    public BluetoothDevicesAdapter(ArrayList<BluetoothDevice> arrayList) {
         this.arrayList=arrayList;
     }
 
@@ -38,7 +39,7 @@ public class BluetoothDevicesAdapter extends RecyclerView.Adapter<BluetoothDevic
 
     @Override
     public void onBindViewHolder(ViewHolder holder,int position){
-        holder.tvDevice.setText(arrayList.get(position).getAddress());
+        holder.tvDevice.setText(arrayList.get(position).getAddress()+":::"+arrayList.get(position).getName());
     }
 
     @Override

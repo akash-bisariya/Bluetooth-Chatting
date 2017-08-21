@@ -3,11 +3,14 @@ package com.affle.bluetoothchatting;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -27,8 +30,10 @@ import android.widget.Toast;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,7 +50,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
     @BindView(R.id.rv_bluetooth_devices)
     RecyclerView rvBluetoothDevices;
     BluetoothAdapter bluetoothAdapter;
-    ArrayList arrayList = new ArrayList();
+    ArrayList<BluetoothDevice> arrayList = new ArrayList();
     BluetoothDevicesAdapter bluetoothDevicesAdapter;
     private boolean bluetoothSupported = false;
 
@@ -64,12 +69,12 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
                         bluetoothDevicesAdapter.val().subscribe(new Observer<String>() {
                             @Override
                             public void onSubscribe(@NonNull Disposable d) {
-                                Toast.makeText(MainActivity.this, "Clicked on $it", Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onNext(@NonNull String s) {
                                 Toast.makeText(MainActivity.this, "Clicked on $it", Toast.LENGTH_LONG).show();
+                                getBluetoothDevice(s);
                             }
 
                             @Override
@@ -94,12 +99,21 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
                     bluetoothDevices.setAddress(device3.getAddress());
                     bluetoothDevices.setClassName(device3.getBluetoothClass().toString());
                     bluetoothDevices.setName(device3.getName());
-                    arrayList.add(bluetoothDevices);
+                    arrayList.add(device3);
                     Toast.makeText(MainActivity.this, "Device Found " + bluetoothDevices.getAddress(), Toast.LENGTH_SHORT).show();
                     break;
             }
         }
     };
+
+    private void getBluetoothDevice(String s) {
+        BluetoothDevice blueToothDevice = arrayList.get(Integer.parseInt(s));
+        bluetoothAdapter.cancelDiscovery();
+        new ConnectThread(blueToothDevice);
+
+
+
+    }
 
 
     @Override
