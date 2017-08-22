@@ -16,6 +16,7 @@ public class ConnectThread extends Thread {
     public ConnectThread(BluetoothDevice bluetoothDevice) {
         UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
         UUID second=UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66");
+        UUID third =UUID.fromString("00001106-0000-1000-8000-00805F9B34FB");
         BluetoothSocket tmp =null;
         mBluetoothdevice =bluetoothDevice;
         try {

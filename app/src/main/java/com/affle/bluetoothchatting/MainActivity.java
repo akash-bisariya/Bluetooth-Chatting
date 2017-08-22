@@ -47,12 +47,18 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
 
     @BindView(R.id.btn_search_devices)
     Button btnSearchDevices;
+    @BindView(R.id.btn_listen_devices)
+    Button btnListenDevices;
     @BindView(R.id.rv_bluetooth_devices)
     RecyclerView rvBluetoothDevices;
     BluetoothAdapter bluetoothAdapter;
     ArrayList<BluetoothDevice> arrayList = new ArrayList();
     BluetoothDevicesAdapter bluetoothDevicesAdapter;
     private boolean bluetoothSupported = false;
+    public static final UUID chatUUID = UUID.randomUUID();
+    private ConnectThread mConnectThread;
+    private AcceptThread mAcceptThread;
+
 
 
     public BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -109,7 +115,8 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
     private void getBluetoothDevice(String s) {
         BluetoothDevice blueToothDevice = arrayList.get(Integer.parseInt(s));
         bluetoothAdapter.cancelDiscovery();
-        new ConnectThread(blueToothDevice);
+        mConnectThread = new ConnectThread(blueToothDevice);
+
 
 
 
@@ -122,7 +129,7 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         btnSearchDevices.setOnClickListener(this);
-
+        btnListenDevices.setOnClickListener(this);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         bluetoothDevicesAdapter = new BluetoothDevicesAdapter(arrayList);
@@ -141,6 +148,8 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         } else {
             getBluetoothOn();
         }
+
+
 
 
     }
@@ -207,6 +216,8 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         if (requestCode == 1001 && resultCode == RESULT_OK) {
             Toast.makeText(MainActivity.this, "Bluetooth enabled", Toast.LENGTH_SHORT).show();
             bluetoothSupported = true;
+            mAcceptThread = new AcceptThread(bluetoothAdapter,chatUUID);
+            mAcceptThread.start();
         } else {
             Toast.makeText(MainActivity.this, "Please enable Bluetooth to continue", Toast.LENGTH_SHORT).show();
         }
@@ -232,6 +243,17 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
                     Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
                 }
                 break;
+
+            case R.id.btn_listen_devices:
+                if(bluetoothSupported && bluetoothAdapter.isEnabled()) {
+                    mAcceptThread = new AcceptThread(bluetoothAdapter, chatUUID);
+                    mAcceptThread.start();
+                }
+                else
+                {
+                    Toast.makeText(MainActivity.this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
 
     }
@@ -251,6 +273,4 @@ public class MainActivity extends RxAppCompatActivity implements View.OnClickLis
         // call superclass to save any view hierarchy
         super.onSaveInstanceState(outState);
     }
-
-
 }
